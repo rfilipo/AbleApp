@@ -15,6 +15,7 @@
 #     AUTHOR => [q[Monsenhor <filipo@kobkob.org>]]
 #     BUILD_REQUIRES => { Test::More=>q[0] }
 #     CONFIGURE_REQUIRES => { ExtUtils::MakeMaker=>q[0] }
+#     EXE_FILES => [q[bin/abl]]
 #     LICENSE => q[artistic_2]
 #     MIN_PERL_VERSION => q[5.006]
 #     NAME => q[App::Able]
@@ -62,11 +63,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = App::Able
 NAME_SYM = App_Able
-VERSION = 0.01
+VERSION = 0.0.1
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_01
+VERSION_SYM = 0_0_1
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.01
+XS_VERSION = 0.0.1
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -165,7 +166,7 @@ XS_FILES =
 C_FILES  = 
 O_FILES  = 
 H_FILES  = 
-MAN1PODS = 
+MAN1PODS = bin/abl
 MAN3PODS = lib/App/Able.pm \
 	lib/App/Able/Bot.pm \
 	lib/App/Able/Configure.pm \
@@ -304,7 +305,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = App-Able
-DISTVNAME = App-Able-0.01
+DISTVNAME = App-Able-0.0.1
 
 
 # --- MakeMaker macro section:
@@ -462,6 +463,7 @@ POD2MAN = $(POD2MAN_EXE)
 
 
 manifypods : pure_all config  \
+	bin/abl \
 	lib/App/Able.pm \
 	lib/App/Able/Bot.pm \
 	lib/App/Able/Configure.pm \
@@ -485,6 +487,8 @@ manifypods : pure_all config  \
 	lib/App/Able/Schema/Result/Verification.pm \
 	lib/App/Able/Verify.pm \
 	lib/App/Able/iBot.pm
+	$(NOECHO) $(POD2MAN) --section=$(MAN1EXT) --perm_rw=$(PERM_RW) -u \
+	  bin/abl $(INST_MAN1DIR)/abl.$(MAN1EXT) 
 	$(NOECHO) $(POD2MAN) --section=$(MAN3EXT) --perm_rw=$(PERM_RW) -u \
 	  lib/App/Able.pm $(INST_MAN3DIR)/App::Able.$(MAN3EXT) \
 	  lib/App/Able/Bot.pm $(INST_MAN3DIR)/App::Able::Bot.$(MAN3EXT) \
@@ -517,6 +521,22 @@ manifypods : pure_all config  \
 
 
 # --- MakeMaker installbin section:
+
+EXE_FILES = bin/abl
+
+pure_all :: $(INST_SCRIPT)/abl
+	$(NOECHO) $(NOOP)
+
+realclean ::
+	$(RM_F) \
+	  $(INST_SCRIPT)/abl 
+
+$(INST_SCRIPT)/abl : bin/abl $(FIRST_MAKEFILE) $(INST_SCRIPT)$(DFSEP).exists $(INST_BIN)$(DFSEP).exists
+	$(NOECHO) $(RM_F) $(INST_SCRIPT)/abl
+	$(CP) bin/abl $(INST_SCRIPT)/abl
+	$(FIXIN) $(INST_SCRIPT)/abl
+	-$(NOECHO) $(CHMOD) $(PERM_RWX) $(INST_SCRIPT)/abl
+
 
 
 # --- MakeMaker subdirs section:
@@ -596,7 +616,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '    - inc' >> META_new.yml
 	$(NOECHO) $(ECHO) 'requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: '\''5.006'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: '\''0.01'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: v0.0.1' >> META_new.yml
 	$(NOECHO) $(ECHO) 'x_serialization_backend: '\''CPAN::Meta::YAML version 0.018'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
@@ -639,7 +659,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.01",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "v0.0.1",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "x_serialization_backend" : "JSON::PP version 2.27400_02"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
@@ -925,7 +945,7 @@ testdb_static :: static pure_all
 # --- MakeMaker ppd section:
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
-	$(NOECHO) $(ECHO) '<SOFTPKG NAME="App-Able" VERSION="0.01">' > App-Able.ppd
+	$(NOECHO) $(ECHO) '<SOFTPKG NAME="App-Able" VERSION="0.0.1">' > App-Able.ppd
 	$(NOECHO) $(ECHO) '    <ABSTRACT>The agile DevOps manager</ABSTRACT>' >> App-Able.ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR>Monsenhor &lt;filipo@kobkob.org&gt;</AUTHOR>' >> App-Able.ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> App-Able.ppd
@@ -983,6 +1003,10 @@ config ::
 
 
 # --- MakeMaker postamble section:
+config::
+	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)'\'')' -- \
+	  'assets/db_default.db' '$(INST_LIB)/auto/share/module/App-Able/db_default.db' \
+	  'assets/default_schema.db' '$(INST_LIB)/auto/share/module/App-Able/default_schema.db' 
 
 
 # End.
